@@ -1,9 +1,10 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { auth } = require('../middlewares/auth');
+const { auth ,authAdmin } = require('../middlewares/auth');
 const { UserModel, validUser, validLogin, createToken } = require('../models/userModel'); // ✅ ייבוא מלא
 const router = express.Router();
+
 
 router.get("/", async (req, res) => {
     res.json({ message: "You are authenticated!" });
@@ -47,12 +48,21 @@ router.post("/login", async (req, res) => {
             return res.status(401).json({ msg: "Password or email is wrong ,code:2" });
         }
 
-        let newToken = createToken(user._id);
+        let newToken = createToken(user._id,user.role);
         res.json({ token: newToken });
     }
     catch (err) {
         console.log(err);
         res.status(500).json({ msg: "err" });
+    }
+});
+router.get('/usersList', authAdmin, async (req, res) => {
+    try {
+        const data = await UserModel.find({}, { password: 0 });
+        res.json(data);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ msg: 'err', err });
     }
 });
 
